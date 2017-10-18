@@ -1,0 +1,17 @@
+#!/bin/bash
+
+SCHNM=$1
+NETNM=$(echo $1 | sed -n 's/\.sch/.net/p')
+NM=$(echo $1 | sed -n 's/\.sch//p')
+
+echo $SCHNM
+echo $NETNM
+
+gnetlist -g spice-sdb -o $NETNM $SCHNM
+
+cat <<EOF | ngspice -p $NETNM
+tran 1u 2m
+wrdata $NM v(out)
+EOF
+
+gnuplot -p -e "plot \"$NM.data\" using 1:2 w lines"

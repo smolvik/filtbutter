@@ -1,0 +1,23 @@
+#!/bin/bash
+
+SCHNM=$1
+NETNM=$(echo $1 | sed -n 's/\.sch/.net/p')
+NM=$(echo $1 | sed -n 's/\.sch//p')
+
+NPF='1000'
+F1HZ='1'
+F2HZ='10meg'
+
+echo $SCHNM
+echo $NETNM
+
+gnetlist -g spice-sdb -o $NETNM $SCHNM
+
+cat <<EOF | ngspice -p $NETNM
+ac dec $NPF $F1HZ $F2HZ
+wrdata $NM db(v(out))
+EOF
+set grid ytics lc rgb "#bbbbbb" lw 1 lt 0; set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+
+gnuplot -p -e "set grid ytics lc rgb \"#bbbbbb\" lw 1 lt 0; set grid xtics lc rgb \"#bbbbbb\" lw 1 lt 0;\
+set logscale x 10; plot \"$NM.data\" using 1:2 w lines"
